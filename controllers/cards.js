@@ -2,8 +2,9 @@ const Card = require('../models/card');
 
 function createCard(req, res) {
   const { name, link } = req.body;
+  const owner = req.user._id;
 
-  Card.create({ name, link })
+  Card.create({ name, link, owner })
     .then((card) => res.send({ data: card }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
@@ -16,10 +17,16 @@ function createCard(req, res) {
 
 function deleteCard(req, res) {
   Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => res.send({ data: card }))
+    .then((card) => {
+      if (!card) {
+        res.status(404).send({ message: 'Передан несуществующий id карточки.' });
+        return;
+      }
+      res.send({ data: card });
+    })
     .catch((error) => {
       if (error.name === 'CastError') {
-        res.status(404).send({ message: 'Карточка с указанным id не найдена' });
+        res.status(400).send({ message: 'Проверьте введенные данные' });
       } else {
         res.status(500).send({ message: error.message });
       }
@@ -33,7 +40,7 @@ function getAllCards(req, res) {
       if (error.name === 'ObjectParameterError') {
         res.status(400).send({ message: 'Переданы некорректные параметры запроса карточек' });
       } else {
-        res.status(500).send({ message: 'Произошла ошибка при скачивании карточек' });
+        res.status(500).send({ message: error.message });
       }
     });
 }
@@ -45,12 +52,18 @@ function likeCard(req, res) {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send({ data: card }))
-    .catch((error) => {
-      if (error.name === 'CastError') {
+    .then((card) => {
+      if (!card) {
         res.status(404).send({ message: 'Передан несуществующий id карточки.' });
         return;
       }
+      res.send({ data: card });
+    })
+    .catch((error) => {
+      // if (error.name === 'CastError') {
+      //   res.status(404).send({ message: 'Передан несуществующий id карточки.' });
+      //   return;
+      // }
       if (error.name === 'MongooseError') {
         res.status(400).send({ message: 'Переданы некорректные данные для постановки лайка' });
         return;
@@ -66,12 +79,18 @@ function dislikeCard(req, res) {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send({ data: card }))
-    .catch((error) => {
-      if (error.name === 'CastError') {
+    .then((card) => {
+      if (!card) {
         res.status(404).send({ message: 'Передан несуществующий id карточки.' });
         return;
       }
+      res.status(200).send({ data: card });
+    })
+    .catch((error) => {
+      // if (error.name === 'CastError') {
+      //   res.status(404).send({ message: 'Передан несуществующий id карточки.' });
+      //   return;
+      // }
       if (error.name === 'MongooseError') {
         res.status(400).send({ message: 'Переданы некорректные данные для снятия лайка' });
         return;

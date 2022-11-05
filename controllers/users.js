@@ -18,10 +18,15 @@ function createUser(req, res) {
 
 function getUser(req, res) {
   User.findById(req.params.userId)
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (!user) {
+        res.status(404).send({ message: 'Пользователь не найден' });
+      }
+      res.send({ data: user });
+    })
     .catch((error) => {
       if (error.name === 'CastError') {
-        res.status(404).send({ message: 'Пользователь не найден catch' });
+        res.status(400).send({ message: 'При запросе переданы некорректные данные' });
       } else {
         res.status(500).send({ message: error.message });
       }
@@ -42,7 +47,7 @@ function getAllUsers(req, res) {
 
 function updateUser(req, res) {
   const { _id } = req.user;
-  User.findByIdAndUpdate(_id, ['awdada'], { new: true })
+  User.findByIdAndUpdate(_id, req.body, { new: true })
     .then((user) => res.send({ data: user }))
     .catch((error) => {
       if (error.name === 'CastError') {
