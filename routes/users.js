@@ -7,12 +7,6 @@ const {
   updateAvatar,
 } = require('../controllers/users');
 
-// GET /users — возвращает всех пользователей
-// GET /users/:userId - возвращает пользователя по _id
-// POST /users — создаёт пользователя
-// PATCH /users/me — обновляет профиль
-// PATCH /users/me/avatar — обновляет аватар
-
 userRouter.get('/', getAllUsers);
 
 userRouter.get('/:userId', getUser);
