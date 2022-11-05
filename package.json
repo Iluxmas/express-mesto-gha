@@ -4,9 +4,13 @@
   "private": true,
   "author": "Ilya Su",
   "scripts": {
-    "start": "app.js",
+    "start": "node app.js",
     "dev": "nodemon app.js",
     "lint": "npx eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Iluxmas/express-mesto-gha.git"
   },
   "browserslist": {
     "production": [
