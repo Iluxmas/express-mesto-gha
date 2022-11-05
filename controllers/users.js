@@ -45,7 +45,7 @@ function getAllUsers(req, res) {
 
 function updateUser(req, res) {
   const { _id } = req.user;
-  User.findByIdAndUpdate(_id, req.body, { new: true })
+  User.findByIdAndUpdate(_id, req.body, { runValidators: true, new: true })
     .then((user) => res.send({ data: user }))
     .catch((error) => {
       if (error.name === 'CastError') {
