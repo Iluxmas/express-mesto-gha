@@ -7,9 +7,7 @@ function createUser(req, res) {
     .then((user) => res.send({ data: user }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        res.status(400).send({
-          message: 'Произошла ошибка при создании пользователя, проверьте введенные данные',
-        });
+        res.status(400).send({ message: 'Произошла ошибка при создании пользователя, проверьте введенные данные' });
       } else {
         res.status(500).send({ message: error.message });
       }
@@ -54,7 +52,7 @@ function updateUser(req, res) {
         res.status(404).send({ message: 'Пользователя с указанным id не найдено' });
         return;
       }
-      if (error.name === 'MongooseError') {
+      if (error.name === 'ValidationError') {
         res.status(400).send({ message: 'Переданы некорректные данные при обновлении профиля' });
         return;
       }
@@ -71,11 +69,11 @@ function updateAvatar(req, res) {
         res.status(404).send({ message: 'Пользователя с указанным id не найдено' });
         return;
       }
-      if (error.name === 'MongooseError') {
+      if (error.name === 'ValidationError') {
         res.status(400).send({ message: 'Переданы некорректные данные при обновлении аватара' });
         return;
       }
-      res.status(400).send({ message: error.message });
+      res.status(500).send({ message: error.message });
     });
 }
 

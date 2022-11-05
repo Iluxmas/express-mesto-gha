@@ -60,11 +60,7 @@ function likeCard(req, res) {
       res.send({ data: card });
     })
     .catch((error) => {
-      // if (error.name === 'CastError') {
-      //   res.status(404).send({ message: 'Передан несуществующий id карточки.' });
-      //   return;
-      // }
-      if (error.name === 'MongooseError') {
+      if (error.name === 'CastError') {
         res.status(400).send({ message: 'Переданы некорректные данные для постановки лайка' });
         return;
       }
@@ -87,11 +83,7 @@ function dislikeCard(req, res) {
       res.status(200).send({ data: card });
     })
     .catch((error) => {
-      // if (error.name === 'CastError') {
-      //   res.status(404).send({ message: 'Передан несуществующий id карточки.' });
-      //   return;
-      // }
-      if (error.name === 'MongooseError') {
+      if (error.name === 'CastError') {
         res.status(400).send({ message: 'Переданы некорректные данные для снятия лайка' });
         return;
       }
