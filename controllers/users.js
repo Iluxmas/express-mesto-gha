@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const { StatusCodes } = require('../utils/StatusCodes');
 
 function createUser(req, res) {
   const { name, about, avatar } = req.body;
@@ -7,9 +8,9 @@ function createUser(req, res) {
     .then((user) => res.send({ data: user }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        res.status(400).send({ message: 'Произошла ошибка при создании пользователя, проверьте введенные данные' });
+        res.status(StatusCodes.BAD_REQUEST).send({ message: error.message });
       } else {
-        res.status(500).send({ message: error.message });
+        res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
       }
     });
 }
@@ -18,15 +19,16 @@ function getUser(req, res) {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(404).send({ message: 'Пользователь не найден' });
+        res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
+        return;
       }
       res.send({ data: user });
     })
     .catch((error) => {
       if (error.name === 'CastError') {
-        res.status(400).send({ message: 'При запросе переданы некорректные данные' });
+        res.status(StatusCodes.BAD_REQUEST).send({ message: 'При запросе переданы некорректные данные' });
       } else {
-        res.status(500).send({ message: error.message });
+        res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
       }
     });
 }
@@ -36,9 +38,9 @@ function getAllUsers(req, res) {
     .then((users) => res.send({ data: users }))
     .catch((error) => {
       if (error.name === 'ObjectParameterError') {
-        res.status(400).send({ message: 'Переданы некорректные параметры запроса пользователей' });
+        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные параметры запроса пользователей' });
       } else {
-        res.status(500).send({ message: 'Произошла ошибка' });
+        res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
       }
     });
 }
@@ -46,34 +48,38 @@ function getAllUsers(req, res) {
 function updateUser(req, res) {
   const { _id } = req.user;
   User.findByIdAndUpdate(_id, req.body, { runValidators: true, new: true })
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (!user) {
+        res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователя с указанным id не найдено' });
+        return;
+      }
+      res.send({ data: user });
+    })
     .catch((error) => {
-      if (error.name === 'CastError') {
-        res.status(404).send({ message: 'Пользователя с указанным id не найдено' });
-        return;
-      }
       if (error.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные при обновлении профиля' });
+        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
         return;
       }
-      res.status(500).send({ message: error.message });
+      res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });
 }
 
 function updateAvatar(req, res) {
   const { _id } = req.user;
   User.findByIdAndUpdate(_id, req.body, { new: true })
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (!user) {
+        res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователя с указанным id не найдено' });
+        return;
+      }
+      res.send({ data: user });
+    })
     .catch((error) => {
-      if (error.name === 'CastError') {
-        res.status(404).send({ message: 'Пользователя с указанным id не найдено' });
-        return;
-      }
       if (error.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные при обновлении аватара' });
+        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара' });
         return;
       }
-      res.status(500).send({ message: error.message });
+      res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });
 }
 
