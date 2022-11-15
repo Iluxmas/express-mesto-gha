@@ -22,7 +22,7 @@ function deleteCard(req, res) {
       if (!card) {
         return res.status(StatusCodes.NOT_FOUND).send({ message: 'Передан несуществующий id карточки.' });
       }
-      res.send({ data: card });
+      return res.send({ data: card });
     })
     .catch((error) => {
       if (error.name === 'CastError') {

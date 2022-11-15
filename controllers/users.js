@@ -31,7 +31,7 @@ function getUser(req, res) {
       if (!user) {
         return res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
       }
-      res.send({ data: user });
+      return res.send({ data: user });
     })
     .catch((error) => {
       if (error.name === 'CastError') {
@@ -48,7 +48,7 @@ function getMyInfo(req, res) {
       if (!user) {
         return res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
       }
-      res.send(user);
+      return res.send(user);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
@@ -119,7 +119,7 @@ function login(req, res) {
         return;
       }
 
-      bcrypt.compare(password, user.password, (error, data) => {
+      bcrypt.compare(password, user.password, (error) => {
         if (error) {
           return res.status(StatusCodes.AUTH_ERROR).send({ message: 'Неправильные почта или пароль' });
         }
