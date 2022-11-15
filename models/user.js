@@ -1,4 +1,4 @@
-const isEmail = require('validator/lib/isEmail');
+const validator = require('validator');
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -26,8 +26,8 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     validate: {
-      validate(email) {
-        return isEmail(email);
+      validator(email) {
+        return validator.isEmail(email);
       },
       message: 'Введен некорректный адрес электронной почты',
     },

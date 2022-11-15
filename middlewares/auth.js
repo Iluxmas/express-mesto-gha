@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { StatusCodes } = require('../utils/StatusCodes');
 
-module.exports = (req, res, next) => {
+function auth(req, res, next) {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
@@ -24,4 +24,7 @@ module.exports = (req, res, next) => {
   req.user = payload;
 
   next();
-};
+  return null;
+}
+
+module.exports = auth;
