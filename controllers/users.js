@@ -18,10 +18,11 @@ function createUser(req, res) {
     .then((user) => res.send({ data: user }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: error.message });
-      } else {
-        res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
+        return res.status(StatusCodes.BAD_REQUEST).send({ message: error.message });
+      } if (error.code === 409) {
+        return res.status(StatusCodes.CONFLICT).send({ message: error.message });
       }
+      return res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });
 }
 

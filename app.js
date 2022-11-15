@@ -20,7 +20,7 @@ mongoose.connect('mongodb://localhost:27017/mestodb');
 app.post('/signin', celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
-    password: Joi.string().required().min(6),
+    password: Joi.string().required().min(8),
   }),
 }), login);
 
@@ -30,14 +30,14 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(6),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().min(2).max(20),
+    avatar: Joi.string().uri(),
   }),
 }), createUser);
 
-// app.use();
+app.use(auth);
 
-app.use('/cards', auth, cardRouter);
-app.use('/users', auth, userRouter);
+app.use('/cards', cardRouter);
+app.use('/users', userRouter);
 app.all('*', (req, res) => res.status(StatusCodes.NOT_FOUND).send({ message: 'Страницы по данному адресу не существует' }));
 
 app.use(errors());
