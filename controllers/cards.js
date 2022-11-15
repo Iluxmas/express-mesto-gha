@@ -20,8 +20,7 @@ function deleteCard(req, res) {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (!card) {
-        res.status(StatusCodes.NOT_FOUND).send({ message: 'Передан несуществующий id карточки.' });
-        return;
+        return res.status(StatusCodes.NOT_FOUND).send({ message: 'Передан несуществующий id карточки.' });
       }
       res.send({ data: card });
     })

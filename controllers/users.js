@@ -1,10 +1,20 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { StatusCodes } = require('../utils/StatusCodes');
 
 function createUser(req, res) {
-  const { name, about, avatar } = req.body;
-
-  User.create({ name, about, avatar })
+  const {
+    password, email, name, about, avatar,
+  } = req.body;
+  bcrypt.hash(password, 12)
+    .then((hash) => User.create({
+      email,
+      password: hash,
+      name,
+      about,
+      avatar,
+    }))
     .then((user) => res.send({ data: user }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
@@ -19,10 +29,26 @@ function getUser(req, res) {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
-        return;
+        return res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
       }
       res.send({ data: user });
+    })
+    .catch((error) => {
+      if (error.name === 'CastError') {
+        res.status(StatusCodes.BAD_REQUEST).send({ message: 'При запросе переданы некорректные данные' });
+      } else {
+        res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
+      }
+    });
+}
+
+function getMyInfo(req, res) {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user) {
+        return res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
+      }
+      res.send(user);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
@@ -83,10 +109,41 @@ function updateAvatar(req, res) {
     });
 }
 
+function login(req, res) {
+  const { email, password } = req.body;
+
+  return User.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        res.status(StatusCodes.AUTH_ERROR).send({ message: 'Неправильные почта или пароль' });
+        return;
+      }
+
+      bcrypt.compare(password, user.password, (error, data) => {
+        if (error) {
+          return res.status(StatusCodes.AUTH_ERROR).send({ message: 'Неправильные почта или пароль' });
+        }
+        const token = jwt.sign({ _id: user._id }, 'iddqd_idkfa', { expiresIn: '7d' });
+        res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
+        // res.send({ token });
+        return res.status(StatusCodes.OK).send({ message: 'Access granted' });
+      });
+    })
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара' });
+        return;
+      }
+      res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
+    });
+}
+
 module.exports = {
   createUser,
   getUser,
+  getMyInfo,
   getAllUsers,
   updateUser,
   updateAvatar,
+  login,
 };

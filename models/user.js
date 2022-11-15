@@ -1,3 +1,4 @@
+const isEmail = require('validator/lib/isEmail');
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -5,17 +6,37 @@ const userSchema = new mongoose.Schema({
     type: String,
     minlength: [2, 'Имя пользователя должно быть от 2 до 30 символов'],
     maxlength: [30, 'Имя пользователя должно быть от 2 до 30 символов'],
-    required: true,
+    default: 'Жак-Ив Кусто',
+    required: false,
   },
   about: {
     type: String,
     minlength: [2, 'Описание пользователя должно быть от 2 до 30 символов'],
     maxlength: [30, 'Описание пользователя должно быть от 2 до 30 символов'],
-    required: true,
+    default: 'Исследователь',
+    required: false,
   },
   avatar: {
     type: String,
+    default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    required: false,
+  },
+  email: {
+    type: mongoose.Schema.Types.String,
     required: true,
+    unique: true,
+    validate: {
+      validate(email) {
+        return isEmail(email);
+      },
+      message: 'Введен некорректный адрес электронной почты',
+    },
+  },
+  password: {
+    type: String,
+    required: true,
+    minlength: 6,
+    select: false,
   },
 });
 
