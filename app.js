@@ -30,14 +30,14 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(6),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().uri().min(2).max(20),
+    avatar: Joi.string().min(2).max(20),
   }),
 }), createUser);
 
-app.use(auth);
+// app.use();
 
-app.use('/cards', cardRouter);
-app.use('/users', userRouter);
+app.use('/cards', auth, cardRouter);
+app.use('/users', auth, userRouter);
 app.all('*', (req, res) => res.status(StatusCodes.NOT_FOUND).send({ message: 'Страницы по данному адресу не существует' }));
 
 app.use(errors());
