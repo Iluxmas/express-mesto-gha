@@ -15,9 +15,12 @@ function createUser(req, res) {
       about,
       avatar,
     }))
-    .then((user) => {
-      delete user.password;
-      res.send({ data: user });
+    .then(() => {
+      res.send({
+        data: {
+          email, name, about, avatar,
+        },
+      });
     })
     .catch((error) => {
       if (error.name === 'ValidationError') {
