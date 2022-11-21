@@ -22,6 +22,9 @@ function deleteCard(req, res) {
       if (!card) {
         return res.status(StatusCodes.NOT_FOUND).send({ message: 'Передан несуществующий id карточки.' });
       }
+      if (card.owner !== req.user._id) {
+        return res.status(StatusCodes.FORBIDDEN).send({ message: 'Только владелец может удалять свои карточки' });
+      }
       return res.send({ data: card });
     })
     .catch((error) => {
