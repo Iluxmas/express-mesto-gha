@@ -15,7 +15,10 @@ function createUser(req, res) {
       about,
       avatar,
     }))
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      delete user.password;
+      res.send({ data: user });
+    })
     .catch((error) => {
       if (error.name === 'ValidationError') {
         return res.status(StatusCodes.BAD_REQUEST).send({ message: error.message });
@@ -49,7 +52,7 @@ function getMyInfo(req, res) {
       if (!user) {
         return res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
       }
-      return res.send(user);
+      return res.status(StatusCodes.OK).send(user);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
@@ -127,7 +130,6 @@ function login(req, res) {
         if (data) {
           const token = jwt.sign({ _id: user._id }, 'iddqd_idkfa', { expiresIn: '7d' });
           res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
-          // res.send({ token });
           return res.status(StatusCodes.OK).send({ message: 'Access granted' });
         }
         return res.status(StatusCodes.AUTH_ERROR).send({ message: 'Неправильные почта или пароль' });
