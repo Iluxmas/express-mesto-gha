@@ -17,15 +17,16 @@ function createCard(req, res) {
 }
 
 function deleteCard(req, res) {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
         return res.status(StatusCodes.NOT_FOUND).send({ message: 'Передан несуществующий id карточки.' });
       }
-      if (card.owner !== req.user._id) {
+      if (card.owner.toString() !== req.user._id) {
         return res.status(StatusCodes.FORBIDDEN).send({ message: 'Только владелец может удалять свои карточки' });
       }
-      return res.send({ data: card });
+      card.remove();
+      return res.status(StatusCodes.OK).send({ message: 'Карточка была удалена' });
     })
     .catch((error) => {
       if (error.name === 'CastError') {
