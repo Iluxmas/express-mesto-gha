@@ -1,55 +1,36 @@
 const Card = require('../models/card');
 const { StatusCodes } = require('../utils/StatusCodes');
+const Error403 = require('../errors/error403');
+const Error404 = require('../errors/error404');
 
-function createCard(req, res) {
+function createCard(req, res, next) {
   const { name, link } = req.body;
   const owner = req.user._id;
 
   Card.create({ name, link, owner })
     .then((card) => res.send({ data: card }))
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: error.message });
-      } else {
-        res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
-      }
-    });
+    .catch(next);
 }
 
-function deleteCard(req, res) {
+function deleteCard(req, res, next) {
   Card.findById(req.params.cardId)
     .then((card) => {
-      if (!card) {
-        return res.status(StatusCodes.NOT_FOUND).send({ message: 'Передан несуществующий id карточки.' });
-      }
-      if (card.owner.toString() !== req.user._id) {
-        return res.status(StatusCodes.FORBIDDEN).send({ message: 'Только владелец может удалять свои карточки' });
-      }
+      if (!card) next(new Error404('Передан несуществующий id карточки.'));
+      if (card.owner.toString() !== req.user._id) next(new Error403('Только владелец может удалять свои карточки'));
+
       card.remove();
       return res.status(StatusCodes.OK).send({ message: 'Карточка была удалена' });
     })
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные параметры для удаления карточки' });
-      } else {
-        res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
-      }
-    });
+    .catch(next);
 }
 
-function getAllCards(req, res) {
+function getAllCards(req, res, next) {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch((error) => {
-      if (error.name === 'ObjectParameterError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные параметры запроса карточек' });
-      } else {
-        res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
-      }
-    });
+    .catch(next);
 }
 
-function likeCard(req, res) {
+function likeCard(req, res, next) {
   const { cardId } = req.params;
   Card.findByIdAndUpdate(
     cardId,
@@ -57,22 +38,13 @@ function likeCard(req, res) {
     { new: true },
   )
     .then((card) => {
-      if (!card) {
-        res.status(StatusCodes.NOT_FOUND).send({ message: 'Передан несуществующий id карточки.' });
-        return;
-      }
+      if (!card) next(new Error404('Передан несуществующий id карточки.'));
       res.send({ data: card });
     })
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки лайка' });
-        return;
-      }
-      res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
-    });
+    .catch(next);
 }
 
-function dislikeCard(req, res) {
+function dislikeCard(req, res, next) {
   const { cardId } = req.params;
   Card.findByIdAndUpdate(
     cardId,
@@ -80,19 +52,10 @@ function dislikeCard(req, res) {
     { new: true },
   )
     .then((card) => {
-      if (!card) {
-        res.status(StatusCodes.NOT_FOUND).send({ message: 'Передан несуществующий id карточки.' });
-        return;
-      }
+      if (!card) next(new Error404('Передан несуществующий id карточки.'));
       res.status(200).send({ data: card });
     })
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные данные для снятия лайка' });
-        return;
-      }
-      res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
-    });
+    .catch(next);
 }
 
 module.exports = {

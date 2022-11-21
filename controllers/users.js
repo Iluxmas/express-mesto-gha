@@ -1,19 +1,18 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const Error401 = require('../errors/error401');
+const Error404 = require('../errors/error404');
+const Error409 = require('../errors/error404');
 const { StatusCodes } = require('../utils/StatusCodes');
 
-function createUser(req, res) {
+function createUser(req, res, next) {
   const {
     password, email, name, about, avatar,
   } = req.body;
   bcrypt.hash(password, 12)
     .then((hash) => User.create({
-      email,
-      password: hash,
-      name,
-      about,
-      avatar,
+      email, password: hash, name, about, avatar,
     }))
     .then(() => {
       res.send({
@@ -23,128 +22,77 @@ function createUser(req, res) {
       });
     })
     .catch((error) => {
-      if (error.name === 'ValidationError') {
-        return res.status(StatusCodes.BAD_REQUEST).send({ message: error.message });
-      } if (error.code === 11000) {
-        return res.status(StatusCodes.CONFLICT).send({ message: 'Пользователь с такой почтой уже зарегестрирован' });
+      if (error.code === 11000) {
+        next(new Error409('Пользователь с такой почтой уже зарегестрирован'));
       }
-      return res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
+      next(error);
     });
 }
 
-function getUser(req, res) {
+function getUser(req, res, next) {
   User.findById(req.params.userId)
     .then((user) => {
-      if (!user) {
-        return res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
-      }
+      if (!user) next(new Error404('Пользователь не найден'));
       return res.send({ data: user });
     })
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: 'При запросе переданы некорректные данные' });
-      } else {
-        res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
-      }
-    });
+    .catch(next);
 }
 
-function getMyInfo(req, res) {
+function getMyInfo(req, res, next) {
   User.findById(req.user._id)
     .then((user) => {
-      if (!user) {
-        return res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователь не найден' });
-      }
+      if (!user) next(new Error404('Пользователь не найден'));
       return res.status(StatusCodes.OK).send(user);
     })
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: 'При запросе переданы некорректные данные' });
-      } else {
-        res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
-      }
-    });
+    .catch(next);
 }
 
-function getAllUsers(req, res) {
+function getAllUsers(req, res, next) {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((error) => {
-      if (error.name === 'ObjectParameterError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные параметры запроса пользователей' });
-      } else {
-        res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
-      }
-    });
+    .catch(next);
 }
 
-function updateUser(req, res) {
+function updateUser(req, res, next) {
   const { _id } = req.user;
   User.findByIdAndUpdate(_id, req.body, { runValidators: true, new: true })
     .then((user) => {
-      if (!user) {
-        res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователя с указанным id не найдено' });
-        return;
-      }
+      if (!user) next(new Error404('Пользователя с указанным id не найдено'));
       res.send({ data: user });
     })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
-        return;
-      }
-      res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
-    });
+    .catch(next);
 }
 
-function updateAvatar(req, res) {
+function updateAvatar(req, res, next) {
   const { _id } = req.user;
   User.findByIdAndUpdate(_id, req.body, { new: true })
     .then((user) => {
-      if (!user) {
-        res.status(StatusCodes.NOT_FOUND).send({ message: 'Пользователя с указанным id не найдено' });
-        return;
-      }
+      if (!user) next(new Error404('Пользователя с указанным id не найдено'));
       res.send({ data: user });
     })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара' });
-        return;
-      }
-      res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
-    });
+    .catch(next);
 }
 
-function login(req, res) {
+function login(req, res, next) {
   const { email, password } = req.body;
 
   return User.findOne({ email }).select('+password')
     .then((user) => {
-      if (!user) {
-        res.status(StatusCodes.AUTH_ERROR).send({ message: 'Неправильные почта или пароль' });
-        return;
-      }
+      if (!user) next(new Error401('Неправильные почта или пароль'));
 
       bcrypt.compare(password, user.password, (error, data) => {
-        if (error) {
-          return res.status(StatusCodes.AUTH_ERROR).send({ message: 'Неправильные почта или пароль' });
-        }
+        if (error) next(new Error401('Неправильные почта или пароль'));
+
         if (data) {
           const token = jwt.sign({ _id: user._id }, 'iddqd_idkfa', { expiresIn: '7d' });
           res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
           return res.status(StatusCodes.OK).send({ message: 'Access granted' });
         }
-        return res.status(StatusCodes.AUTH_ERROR).send({ message: 'Неправильные почта или пароль' });
+
+        return next(new Error401('Неправильные почта или пароль'));
       });
     })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        res.status(StatusCodes.BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара' });
-        return;
-      }
-      res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
-    });
+    .catch(next);
 }
 
 module.exports = {

@@ -7,9 +7,10 @@ const { celebrate, Joi, errors } = require('celebrate');
 const auth = require('./middlewares/auth');
 const cardRouter = require('./routes/cards');
 const userRouter = require('./routes/users');
+const Error404 = require('./errors/error404');
 const { Patterns } = require('./utils/Patterns');
-const { StatusCodes } = require('./utils/StatusCodes');
 const { login, createUser } = require('./controllers/users');
+const errorsHandler = require('./middlewares/errorsHandler');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -41,9 +42,11 @@ app.use(auth);
 
 app.use('/cards', cardRouter);
 app.use('/users', userRouter);
-app.all('*', (req, res) => res.status(StatusCodes.NOT_FOUND).send({ message: 'Страницы по данному адресу не существует' }));
+app.all('*', (req, res, next) => next(new Error404('Страницы по данному адресу не существует')));
 
 app.use(errors());
+
+app.use(errorsHandler);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
