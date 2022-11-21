@@ -7,6 +7,7 @@ const { celebrate, Joi, errors } = require('celebrate');
 const auth = require('./middlewares/auth');
 const cardRouter = require('./routes/cards');
 const userRouter = require('./routes/users');
+const { Patterns } = require('./utils/Patterns');
 const { StatusCodes } = require('./utils/StatusCodes');
 const { login, createUser } = require('./controllers/users');
 
@@ -32,7 +33,7 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(8),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().uri(),
+    avatar: Joi.string().pattern(Patterns.url),
   }),
 }), createUser);
 
