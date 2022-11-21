@@ -19,8 +19,8 @@ function createUser(req, res) {
     .catch((error) => {
       if (error.name === 'ValidationError') {
         return res.status(StatusCodes.BAD_REQUEST).send({ message: error.message });
-      } if (error.code === 409) {
-        return res.status(StatusCodes.CONFLICT).send({ message: error.message });
+      } if (error.code === 11000) {
+        return res.status(StatusCodes.CONFLICT).send({ message: 'Пользователь с такой почтой уже зарегестрирован' });
       }
       return res.status(StatusCodes.SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });
@@ -120,14 +120,17 @@ function login(req, res) {
         return;
       }
 
-      bcrypt.compare(password, user.password, (error) => {
+      bcrypt.compare(password, user.password, (error, data) => {
         if (error) {
           return res.status(StatusCodes.AUTH_ERROR).send({ message: 'Неправильные почта или пароль' });
         }
-        const token = jwt.sign({ _id: user._id }, 'iddqd_idkfa', { expiresIn: '7d' });
-        res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
-        // res.send({ token });
-        return res.status(StatusCodes.OK).send({ message: 'Access granted' });
+        if (data) {
+          const token = jwt.sign({ _id: user._id }, 'iddqd_idkfa', { expiresIn: '7d' });
+          res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true });
+          // res.send({ token });
+          return res.status(StatusCodes.OK).send({ message: 'Access granted' });
+        }
+        return res.status(StatusCodes.AUTH_ERROR).send({ message: 'Неправильные почта или пароль' });
       });
     })
     .catch((error) => {
