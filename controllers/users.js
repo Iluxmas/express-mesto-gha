@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const Error401 = require('../errors/error401');
 const Error404 = require('../errors/error404');
-const Error409 = require('../errors/error404');
+const Error409 = require('../errors/error409');
 const { StatusCodes } = require('../utils/StatusCodes');
 
 function createUser(req, res, next) {

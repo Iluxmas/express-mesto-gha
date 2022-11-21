@@ -1,7 +1,7 @@
 /* eslint-disable consistent-return */
 
 const jwt = require('jsonwebtoken');
-const { StatusCodes } = require('../utils/StatusCodes');
+const Error401 = require('../errors/error401');
 
 function auth(req, res, next) {
   const token = req.cookies.jwt;
@@ -10,9 +10,8 @@ function auth(req, res, next) {
   try {
     payload = jwt.verify(token, 'iddqd_idkfa');
   } catch (err) {
-    return res
-      .status(StatusCodes.AUTH_ERROR)
-      .send({ message: 'Необходима авторизация' });
+    next(new Error401('Необходима авторизация'));
+    return;
   }
 
   req.user = payload;

@@ -52,8 +52,9 @@ function dislikeCard(req, res, next) {
     { new: true },
   )
     .then((card) => {
-      if (!card) next(new Error404('Передан несуществующий id карточки.'));
-      res.status(200).send({ data: card });
+      if (!card) return next(new Error404('Передан несуществующий id карточки.'));
+
+      return res.status(200).send({ data: card });
     })
     .catch(next);
 }
