@@ -11,6 +11,7 @@ const Error404 = require('./errors/error404');
 const { Patterns } = require('./utils/Patterns');
 const { login, createUser } = require('./controllers/users');
 const errorsHandler = require('./middlewares/errorsHandler');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -20,6 +21,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
+
+app.use(requestLogger);
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -43,6 +46,8 @@ app.use(auth);
 app.use('/cards', cardRouter);
 app.use('/users', userRouter);
 app.all('*', (req, res, next) => next(new Error404('Страницы по данному адресу не существует')));
+
+app.use(errorLogger);
 
 app.use(errors());
 
